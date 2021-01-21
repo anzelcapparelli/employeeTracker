@@ -1,6 +1,6 @@
-const mysql= require("mysql");
-const inquirer= require("inquirer");
-const cTable= require("console.table");
+const mysql = require("mysql");
+const inquirer = require("inquirer");
+const cTable = require("console.table");
 
 
 // MySQL ref https://www.npmjs.com/package/mysql
@@ -27,6 +27,32 @@ connection.connect(function (err) {
     console.log("connected as id " + connection.threadId + "\n");
 
     // run function to get started
-    // mainMenu();
+    mainMenu();
 
 })
+
+function mainMenu() {
+    inquirer
+        .prompt([
+            {
+                type: "list",
+                message: "What would you like to search for?",
+                choices: 
+                [
+                    "View All Employees", "all artists with multiple hits", "all data on songs within a specific range (ranking)", "search by song name", "exit"
+                ],
+                name: "menu"
+            }
+        ])
+        .then(answers => {
+
+            console.log(answers);
+
+            switch (answers.menu) {
+                case "":
+                    // function () { }
+                    break;
+            }
+        })
+
+}
