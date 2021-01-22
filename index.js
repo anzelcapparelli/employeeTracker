@@ -39,15 +39,16 @@ connection.connect(function (err) {
             return;
         }
 
-        // console.log(data)
-        // console.log("\n\n\n")
+        console.log(data)
+        console.log("\n\n\n")
 
 
         // run function to get started
-        mainMenu();
 
         // console.log(getCurRoles());
+        // getCurRoles();
 
+        mainMenu();
 
     })
 
@@ -94,24 +95,28 @@ function mainMenu() {
 
 function getCurRoles() {
 
-    connection.query("SELECT role.title, role.id FROM role", function (err, res) {
+    let currRoles;
+
+    connection.query("SELECT role.title AS name, role.id AS value FROM role", function (err, res) {
         if (err) console.error(err);
         // Log all results of the SELECT statement
-        const currRoles = res;
-
+        currRoles = res;
+        // console.log(res);
         // console.log(currRoles);
 
-        roleChoices = [];
-       for (entry of currRoles) {
-            // console.log(entry);
-            roleChoices.push({ name: entry.title, value: entry.id })
-            // console.log(roleChoices);
-        };
+        // roleChoices = [{name: res.title, value: res.id}];
 
-        return res;
+        // roleChoices= res.map((entry) => Object{name: entry.title, value: entry.id})
+
+        // return res;
         // console.log(roleChoices);
-        
+
+        return currRoles;
+
     });
+
+
+    return currRoles;
 
 }
 
@@ -202,7 +207,7 @@ function addEl() {
 
 function addEmp() {
 
-getCurRoles();
+    var roles = getCurRoles();
 
     inquirer
         .prompt([
@@ -219,7 +224,7 @@ getCurRoles();
             {
                 type: "list",
                 message: "Please select employee's role:",
-                choices: roleChoices,
+                choices: roles,
                 name: "role"
             },
             {
@@ -297,21 +302,25 @@ function viewEl() {
 }
 
 
-function allEmpGen(){
+function allEmpGen() {
 
     connection.query(`SELECT a.id, a.first_name, a.last_name, role.title, department.name, role.salary, concat(b.first_name, ' ', b.last_name) AS manager 
     FROM role INNER JOIN department ON (role.department_id=department.id) INNER JOIN employee AS a ON (role.id=a.role_id) 
     LEFT JOIN employee AS b ON (a.manager_id=b.id);`, function (err, res) {
-        if (err) {console.error(err)};
+        if (err) { console.error(err) };
         // Log all results of the SELECT statement
 
+        console.log("\n")
         console.table(res);
-
+        console.log("\n")
+        
     });
+    
+    mainMenu();
     
 }
 
-function allEmpDept(){
+function allEmpDept() {
 
     // connection.query(, function (err, res) {
     //     if (err) {console.error(err)};
@@ -323,24 +332,33 @@ function allEmpDept(){
 
 // function allEmpMangr(){}
 
-function allRoles(){
+function allRoles() {
 
     connection.query(`SELECT a.id, a.title AS role, department.name AS department, a.salary 
     FROM role AS a INNER JOIN department ON (a.department_id=department.id);`, function (err, res) {
-        if (err) {console.error(err)};
+        if (err) { console.error(err) };
 
+        console.log("\n")
         console.table(res);
+        console.log("\n")
+
     });
+    mainMenu();
+
 }
 
-function allDepts(){
+function allDepts() {
 
     connection.query(`SELECT department.id, department.name AS department 
     FROM department;`, function (err, res) {
-        if (err) {console.error(err)};
+        if (err) { console.error(err) };
 
+        console.log("\n")
         console.table(res);
+        console.log("\n")
     });
+    mainMenu();
+
 }
 
 
