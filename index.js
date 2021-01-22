@@ -1,6 +1,7 @@
 const mysql = require("mysql");
 const inquirer = require("inquirer");
 const cTable = require("console.table");
+var figlet = require('figlet');
 
 
 // MySQL ref https://www.npmjs.com/package/mysql
@@ -24,23 +25,37 @@ var connection = mysql.createConnection({
 
 connection.connect(function (err) {
     if (err) throw err;
-    console.log("connected as id " + connection.threadId + "\n");
 
     // run function to get started
-    mainMenu();
+
+    figlet("Employee Tracker", function (err, data) {
+        if (err) {
+            console.log('Something went wrong...');
+            console.dir(err);
+            return;
+        }
+        console.log(data)
+
+        console.log("\n\n\n\n")
+
+        mainMenu();
+    });
+
+
 
 })
 
 function mainMenu() {
+
     inquirer
         .prompt([
             {
                 type: "list",
                 message: "What would you like to search for?",
-                choices: 
-                [
-                    "View All Employees", "all artists with multiple hits", "all data on songs within a specific range (ranking)", "search by song name", "exit"
-                ],
+                choices:
+                    [
+                        "View All Employees", "all artists with multiple hits", "all data on songs within a specific range (ranking)", "search by song name", "exit"
+                    ],
                 name: "menu"
             }
         ])
