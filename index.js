@@ -3,8 +3,9 @@ const inquirer = require("inquirer");
 const cTable = require("console.table");
 const figlet = require('figlet');
 
-var roleChoices = [];
-
+var currRoles;
+var currDepts;
+var currEmps;
 
 // MySQL ref https://www.npmjs.com/package/mysql
 // inquirer ref https://www.npmjs.com/package/inquirer
@@ -95,66 +96,48 @@ function mainMenu() {
 
 function getCurRoles() {
 
-    let currRoles;
 
     connection.query("SELECT role.title AS name, role.id AS value FROM role", function (err, res) {
         if (err) console.error(err);
         // Log all results of the SELECT statement
-        currRoles = res;
-        // console.log(res);
-        // console.log(currRoles);
-
-        // roleChoices = [{name: res.title, value: res.id}];
-
-        // roleChoices= res.map((entry) => Object{name: entry.title, value: entry.id})
-
-        // return res;
-        // console.log(roleChoices);
+        currRoles = [];
+        res.map((row) => currRoles.push({ name: row.name, value: row.value }));
 
         return currRoles;
 
     });
-
-
-    return currRoles;
 
 }
 
 
 function getCurDepts() {
 
-    connection.query("SELECT department.name, department.id FROM department", function (err, res) {
+    connection.query("SELECT department.name AS name, department.id AS value FROM department", function (err, res) {
         if (err) console.error(err);
         // Log all results of the SELECT statement
-        const currDepts = res;
 
-        const deptChoices = [];
-        currDepts.forEach(entry => {
-            deptChoices.push({ name: entry.name, value: entry.id })
-        });
+        currDepts = [];
+        res.map((row) => currDepts.push({ name: row.name, value: row.value }));
 
-        return deptChoices;
+        return currDepts;
 
     });
 
 }
 
 
-function getCurEmp() {
+function getCurEmps() {
 
-    connection.query("SELECT concat(employee.first_name, '', employee.last_name) AS name, employee.id FROM employee", function (err, res) {
+    connection.query("SELECT concat(employee.first_name, ' ', employee.last_name) AS name, employee.id AS value FROM employee", function (err, res) {
         if (err) console.error(err);
         // Log all results of the SELECT statement
-        const currEmps = res;
 
-        const empChoices = [];
-        currEmps.forEach(entry => {
-            empChoices.push({ name: entry.name, value: entry.id })
-        });
+        currEmps = [];
+        res.map((row) => currEmps.push({ name: row.name, value: row.value }));
 
-        return empChoices;
+        return currEmps;
 
-    }).then(answers => empChoices);
+    })
 
 }
 
@@ -168,6 +151,11 @@ function getCurEmp() {
 // Update employee roles
 
 function addEl() {
+
+    getCurRoles();
+    getCurDepts();
+    getCurEmps();
+
     inquirer
         .prompt([
             {
@@ -207,8 +195,6 @@ function addEl() {
 
 function addEmp() {
 
-    var roles = getCurRoles();
-
     inquirer
         .prompt([
             {
@@ -224,40 +210,75 @@ function addEmp() {
             {
                 type: "list",
                 message: "Please select employee's role:",
-                choices: roles,
+                choices: currRoles,
                 name: "role"
             },
             {
                 type: "list",
-                message: "Please select employee's manager (or select 'leave blank'):",
-                choices: [{ name: "a", value: 1 }, { name: "b", value: 2 }],
+                message: "Please select employee's manager (or select 'LEAVE BLANK'):",
+                choices: [...currEmps, { name: "LEAVE BLANK", value: null }],
                 name: "manager"
             },
         ])
         .then(answers => {
 
+            const newEl =
+            {
+                first_name: answers.firstName,
+                last_name: answers.lastName,
+                role_id: answers.role,
+                manager_id: answers.manager
+            };
 
-            // var query = connection.query(
-            //     "INSERT INTO employee SET ?",
-            //     {
-            //         first_name: answers.firstName,
-            //         last_name: answers.lastName,
-            //         role_id: answers.role,
-            //         manager_id: answers.manager
-            //     },
-            //     function (err, res) {
-            //         if (err) throw err;
-            //         console.log(res.affectedRows + "item added!\n");
-            //         // Call updateProduct AFTER the INSERT completes
-            //     }
-            // );
+            var query = connection.query(
+                "INSERT INTO employee SET ?", newEl,
+                // {
+                //     first_name: answers.firstName,
+                //     last_name: answers.lastName,
+                //     role_id: answers.role,
+                //     manager_id: answers.manager
+                // },
+                function (err, res) {
+                    if (err) throw err;
+                    console.log(res.affectedRows + "adding to database...\n");
+                    // Call updateProduct AFTER the INSERT completes
+                }
+            )
 
+            connection.query(`SELECT a.id, a.first_name, a.last_name, role.title, department.name, role.salary, concat(b.first_name, ' ', b.last_name) AS manager 
+FROM role INNER JOIN department ON (role.department_id=department.id) INNER JOIN employee AS a ON (role.id=a.role_id) 
+LEFT JOIN employee AS b ON (a.manager_id=b.id) WHERE ? AND ?;`, [{ "a.first_name": answers.firstName }, { "a.last_name": answers.lastName }],
+
+                function (err, res) {
+                    if (err) throw err;
+
+                    console.table(res)
+
+                    inquirer.prompt([
+                        {
+                            type: "confirm",
+                            message: "Is the above information correct?",
+                            name: "boolConf"
+                        }
+                    ]), then(answers => {
+                        if (!answers.boolConf) {
+                            // delete row just added!
+                        }
+
+                        mainMenu();
+
+                    })
+
+
+
+
+
+
+                })
 
         })
 
 }
-
-
 // =====================================================================================
 // view
 
@@ -313,11 +334,11 @@ function allEmpGen() {
         console.log("\n")
         console.table(res);
         console.log("\n")
-        
+
     });
-    
+
     mainMenu();
-    
+
 }
 
 function allEmpDept() {
