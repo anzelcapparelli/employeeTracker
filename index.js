@@ -41,37 +41,8 @@ connection.connect(function (err) {
         // run function to get started
         // mainMenu();
 
+        getCurEmp();
 
-        connection.query("SELECT role.title, role.id FROM role", function (err, res) {
-            if (err) console.error(err);
-            // Log all results of the SELECT statement
-            const currRoles = res;
-
-            const roleChoices = [];
-            currRoles.forEach(entry => {
-                roleChoices.push({name: entry.title, value: entry.id})
-            });
-
-            return console.log(roleChoices)
-
-        });
-
-
-
-
-        connection.query("SELECT department.name, department.id FROM department", function (err, res) {
-            if (err) console.error(err);
-            // Log all results of the SELECT statement
-            const currDepts = res;
-
-            const deptChoices = [];
-            currDepts.forEach(entry => {
-                deptChoices.push({name: entry.name, value: entry.id})
-            });
-
-            return console.log(deptChoices)
-
-        });
     })
 
 })
@@ -108,6 +79,64 @@ function mainMenu() {
 
             }
         })
+
+}
+
+
+function getCurRoles(){
+
+    connection.query("SELECT role.title, role.id FROM role", function (err, res) {
+        if (err) console.error(err);
+        // Log all results of the SELECT statement
+        const currRoles = res;
+
+        const roleChoices = [];
+        currRoles.forEach(entry => {
+            roleChoices.push({name: entry.title, value: entry.id})
+        });
+
+        return console.log(roleChoices)
+
+    });
+
+
+}
+
+
+function getCurDepts(){
+
+    connection.query("SELECT department.name, department.id FROM department", function (err, res) {
+        if (err) console.error(err);
+        // Log all results of the SELECT statement
+        const currDepts = res;
+
+        const deptChoices = [];
+        currDepts.forEach(entry => {
+            deptChoices.push({name: entry.name, value: entry.id})
+        });
+
+        return console.log(deptChoices)
+
+    });
+
+}
+
+
+function getCurEmp(){
+
+    connection.query("SELECT concat(employee.first_name, '', employee.last_name) AS name, employee.id FROM employee", function (err, res) {
+        if (err) console.error(err);
+        // Log all results of the SELECT statement
+        const currEmps = res;
+
+        const empChoices = [];
+        currEmps.forEach(entry => {
+            empChoices.push({name: entry.name, value: entry.id})
+        });
+
+        return console.log(empChoices)
+
+    });
 
 }
 
@@ -174,11 +203,13 @@ function addEmp() {
             {
                 type: "list",
                 message: "Please select employee's role:",
+                choices: getCurRoles(),
                 name: "role"
             },
             {
-                type: "input",
+                type: "",
                 message: "Please select employee's manager (or select 'leave blank'):",
+                choices: [],
                 name: "manager"
             },
         ])
