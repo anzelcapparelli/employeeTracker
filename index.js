@@ -1,12 +1,17 @@
 const mysql = require("mysql");
 const inquirer = require("inquirer");
 const cTable = require("console.table");
-var figlet = require('figlet');
+const figlet = require('figlet');
+
+var roleChoices = [];
 
 
 // MySQL ref https://www.npmjs.com/package/mysql
 // inquirer ref https://www.npmjs.com/package/inquirer
 // console.table ref https://www.npmjs.com/package/console.table
+
+//  https://github.com/anzelcapparelli/employeeTracker
+
 
 
 var connection = mysql.createConnection({
@@ -34,18 +39,22 @@ connection.connect(function (err) {
             return;
         }
 
-        console.log(data)
-        console.log("\n\n\n\n")
+        // console.log(data)
+        // console.log("\n\n\n")
 
 
         // run function to get started
-        // mainMenu();
+        mainMenu();
 
-        getCurEmp();
+        // console.log(getCurRoles());
+
 
     })
 
 })
+
+
+
 
 function mainMenu() {
 
@@ -83,27 +92,31 @@ function mainMenu() {
 }
 
 
-function getCurRoles(){
+function getCurRoles() {
 
     connection.query("SELECT role.title, role.id FROM role", function (err, res) {
         if (err) console.error(err);
         // Log all results of the SELECT statement
         const currRoles = res;
 
-        const roleChoices = [];
-        currRoles.forEach(entry => {
-            roleChoices.push({name: entry.title, value: entry.id})
-        });
+        // console.log(currRoles);
 
-        return console.log(roleChoices)
+        roleChoices = [];
+       for (entry of currRoles) {
+            // console.log(entry);
+            roleChoices.push({ name: entry.title, value: entry.id })
+            // console.log(roleChoices);
+        };
 
+        return res;
+        // console.log(roleChoices);
+        
     });
-
 
 }
 
 
-function getCurDepts(){
+function getCurDepts() {
 
     connection.query("SELECT department.name, department.id FROM department", function (err, res) {
         if (err) console.error(err);
@@ -112,17 +125,17 @@ function getCurDepts(){
 
         const deptChoices = [];
         currDepts.forEach(entry => {
-            deptChoices.push({name: entry.name, value: entry.id})
+            deptChoices.push({ name: entry.name, value: entry.id })
         });
 
-        return console.log(deptChoices)
+        return deptChoices;
 
     });
 
 }
 
 
-function getCurEmp(){
+function getCurEmp() {
 
     connection.query("SELECT concat(employee.first_name, '', employee.last_name) AS name, employee.id FROM employee", function (err, res) {
         if (err) console.error(err);
@@ -131,12 +144,12 @@ function getCurEmp(){
 
         const empChoices = [];
         currEmps.forEach(entry => {
-            empChoices.push({name: entry.name, value: entry.id})
+            empChoices.push({ name: entry.name, value: entry.id })
         });
 
-        return console.log(empChoices)
+        return empChoices;
 
-    });
+    }).then(answers => empChoices);
 
 }
 
@@ -188,6 +201,9 @@ function addEl() {
 //     },
 
 function addEmp() {
+
+getCurRoles();
+
     inquirer
         .prompt([
             {
@@ -203,32 +219,33 @@ function addEmp() {
             {
                 type: "list",
                 message: "Please select employee's role:",
-                choices: getCurRoles(),
+                choices: roleChoices,
                 name: "role"
             },
             {
-                type: "",
+                type: "list",
                 message: "Please select employee's manager (or select 'leave blank'):",
-                choices: [],
+                choices: [{ name: "a", value: 1 }, { name: "b", value: 2 }],
                 name: "manager"
             },
         ])
         .then(answers => {
 
 
-            var query = connection.query(
-                "INSERT INTO employee SET ?",
-                {
-                    first_name: answers.firstName,
-                    last_name: answers.lastName,
-                    current_bid: 1000
-                },
-                function (err, res) {
-                    if (err) throw err;
-                    console.log(res.affectedRows + "item added!\n");
-                    // Call updateProduct AFTER the INSERT completes
-                }
-            );
+            // var query = connection.query(
+            //     "INSERT INTO employee SET ?",
+            //     {
+            //         first_name: answers.firstName,
+            //         last_name: answers.lastName,
+            //         role_id: answers.role,
+            //         manager_id: answers.manager
+            //     },
+            //     function (err, res) {
+            //         if (err) throw err;
+            //         console.log(res.affectedRows + "item added!\n");
+            //         // Call updateProduct AFTER the INSERT completes
+            //     }
+            // );
 
 
         })
@@ -254,13 +271,22 @@ function viewEl() {
                 name: "viewType"
             }
         ]).then(answers => {
-            switch (answers.addType) {
-                case "New Employee":
-                    // employee adder inquirer
+            switch (answers.viewType) {
+                case "All Employees":
+                    console.log("generating results...")
+                    allEmpGen();
                     break;
 
-                case "New Role":
-                    // role adder inquirer
+                case "All Employees by Department":
+                    // inquirer: pick dpt, then show
+                    break;
+
+                // case "All Employees by Manager":
+                //     // inquirer: pick manager, then show
+                //     break;
+
+                case "View All Roles":
+                    // view all roles
                     break;
 
                 default:
@@ -271,7 +297,29 @@ function viewEl() {
 }
 
 
+function allEmpGen(){
 
+    connection.query(`SELECT a.id, a.first_name, a.last_name, role.title, department.name, role.salary, concat(b.first_name, ' ', b.last_name) AS manager 
+    FROM role INNER JOIN department ON (role.department_id=department.id) INNER JOIN employee AS a ON (role.id=a.role_id) 
+    LEFT JOIN employee AS b ON (a.manager_id=b.id);`, function (err, res) {
+        if (err) {console.error(err)};
+        // Log all results of the SELECT statement
+
+        console.table(res);
+
+    });
+    
+}
+
+function allEmpDept(){
+
+}
+
+// function allEmpMangr(){}
+
+function allRoles(){
+
+}
 
 
 
