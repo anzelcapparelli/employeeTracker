@@ -272,8 +272,8 @@ function viewEl() {
             }
         ]).then(answers => {
             switch (answers.viewType) {
+
                 case "All Employees":
-                    console.log("generating results...")
                     allEmpGen();
                     break;
 
@@ -286,11 +286,11 @@ function viewEl() {
                 //     break;
 
                 case "View All Roles":
-                    // view all roles
+                    allRoles();
                     break;
 
                 default:
-                    // role adder inquirer
+                    allDepts();
                     break;
             }
         })
@@ -313,12 +313,34 @@ function allEmpGen(){
 
 function allEmpDept(){
 
+    // connection.query(, function (err, res) {
+    //     if (err) {console.error(err)};
+
+    //     console.table(res);
+    // });
+
 }
 
 // function allEmpMangr(){}
 
 function allRoles(){
 
+    connection.query(`SELECT a.id, a.title AS role, department.name AS department, a.salary 
+    FROM role AS a INNER JOIN department ON (a.department_id=department.id);`, function (err, res) {
+        if (err) {console.error(err)};
+
+        console.table(res);
+    });
+}
+
+function allDepts(){
+
+    connection.query(`SELECT department.id, department.name AS department 
+    FROM department;`, function (err, res) {
+        if (err) {console.error(err)};
+
+        console.table(res);
+    });
 }
 
 
