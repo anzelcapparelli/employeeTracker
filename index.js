@@ -55,11 +55,21 @@ connection.connect(function (err) {
             return console.log(roleChoices)
 
         });
+
+
+
+
         connection.query("SELECT department.name, department.id FROM department", function (err, res) {
             if (err) console.error(err);
             // Log all results of the SELECT statement
-            const currentDepts = res;
+            const currDepts = res;
 
+            const deptChoices = [];
+            currDepts.forEach(entry => {
+                deptChoices.push({name: entry.name, value: entry.id})
+            });
+
+            return console.log(deptChoices)
 
         });
     })
