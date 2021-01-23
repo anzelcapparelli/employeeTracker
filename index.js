@@ -6,6 +6,7 @@ const figlet = require('figlet');
 var currRoles;
 var currDepts;
 var currEmps;
+var currMngrs;
 
 // MySQL ref https://www.npmjs.com/package/mysql
 // inquirer ref https://www.npmjs.com/package/inquirer
@@ -142,6 +143,22 @@ function getCurEmps() {
 }
 
 
+function getCurMngrs() {
+
+    connection.query("SELECT a.manager_id, concat(b.first_name, ' ', b.last_name) AS manager FROM employee AS a LEFT JOIN employee AS b ON (a.manager_id=b.id) GROUP BY manager_id HAVING count(*) > 0;", function (err, res) {
+        if (err) console.error(err);
+        // Log all results of the SELECT statement
+
+        currMngrs = [];
+        res.map((row) => currMngrs.push({ name: row.manager, value: row.manager_id }));
+
+        return currMngrs;
+
+    })
+
+}
+
+
 // =========================================================================
 
 // Requirements
@@ -263,12 +280,6 @@ LEFT JOIN employee AS b ON (a.manager_id=b.id) WHERE ? AND ?;`, [{ "a.first_name
                         mainMenu();
 
                     })
-
-
-
-
-
-
                 })
 
         })
@@ -281,7 +292,7 @@ function viewEl() {
 
     // getCurRoles();
     getCurDepts();
-    getCurEmps();
+    getCurMngrs();
 
 
     inquirer
@@ -308,9 +319,9 @@ function viewEl() {
                     allEmpDept();
                     break;
 
-                // case "All Employees by Manager":
-                //     // inquirer: pick manager, then show
-                //     break;
+                case "All Employees by Manager":
+                    allEmpMangr();
+                    break;
 
                 case "View All Roles":
                     allRoles();
@@ -345,12 +356,6 @@ function allEmpGen() {
 
 function allEmpDept() {
 
-    // connection.query(, function (err, res) {
-    //     if (err) {console.error(err)};
-
-    //     console.table(res);
-    // });
-
     inquirer
         .prompt([
             {
@@ -364,7 +369,7 @@ function allEmpDept() {
 
             connection.query(`SELECT a.id, a.first_name, a.last_name, r.title AS role, d.name AS department, r.salary, concat(b.first_name, ' ', b.last_name) AS manager 
                 FROM role AS r INNER JOIN department AS d ON (r.department_id=d.id) INNER JOIN employee AS a ON (r.id=a.role_id) 
-                LEFT JOIN employee AS b ON (a.manager_id=b.id) WHERE ?;`, {"d.id": answers.deptView},
+                LEFT JOIN employee AS b ON (a.manager_id=b.id) WHERE ?;`, { "d.id": answers.deptView },
                 function (err, res) {
                     if (err) { console.error(err) };
 
@@ -379,7 +384,48 @@ function allEmpDept() {
         })
 }
 
+
+function allEmpMangr() {
+
+    inquirer
+        .prompt([
+            {
+                type: "list",
+                message: "Which manager would you like to view the employees of?",
+                choices: currMngrs,
+                name: "mangrView"
+            }
+        ])
+        .then(answers => {
+
+            connection.query(`SELECT a.id, a.first_name, a.last_name, r.title AS role, d.name AS department, r.salary, concat(b.first_name, ' ', b.last_name) AS manager 
+                FROM role AS r INNER JOIN department AS d ON (r.department_id=d.id) INNER JOIN employee AS a ON (r.id=a.role_id) 
+                LEFT JOIN employee AS b ON (a.manager_id=b.id) WHERE ?;`, { "a.manager_id": answers.mangrView },
+                function (err, res) {
+                    if (err) { console.error(err) };
+
+                    console.log("\n")
+                    console.table(res);
+                    console.log("\n")
+
+                    mainMenu();
+
+                });
+
+        })
+}
+
+
+
+
 // function allEmpMangr(){}
+
+
+
+
+
+
+
 
 function allRoles() {
 
