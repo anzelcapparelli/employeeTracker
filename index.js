@@ -232,12 +232,7 @@ function addEmp() {
 
             var query = connection.query(
                 "INSERT INTO employee SET ?", newEl,
-                // {
-                //     first_name: answers.firstName,
-                //     last_name: answers.lastName,
-                //     role_id: answers.role,
-                //     manager_id: answers.manager
-                // },
+
                 function (err, res) {
                     if (err) throw err;
                     console.log(res.affectedRows + "adding to database...\n");
@@ -283,6 +278,12 @@ LEFT JOIN employee AS b ON (a.manager_id=b.id) WHERE ? AND ?;`, [{ "a.first_name
 // view
 
 function viewEl() {
+
+    // getCurRoles();
+    getCurDepts();
+    getCurEmps();
+
+
     inquirer
         .prompt([
             {
@@ -304,7 +305,7 @@ function viewEl() {
                     break;
 
                 case "All Employees by Department":
-                    // inquirer: pick dpt, then show
+                    allEmpDept();
                     break;
 
                 // case "All Employees by Manager":
@@ -327,15 +328,16 @@ function allEmpGen() {
 
     connection.query(`SELECT a.id, a.first_name, a.last_name, role.title, department.name, role.salary, concat(b.first_name, ' ', b.last_name) AS manager 
     FROM role INNER JOIN department ON (role.department_id=department.id) INNER JOIN employee AS a ON (role.id=a.role_id) 
-    LEFT JOIN employee AS b ON (a.manager_id=b.id);`, function (err, res) {
-        if (err) { console.error(err) };
-        // Log all results of the SELECT statement
+    LEFT JOIN employee AS b ON (a.manager_id=b.id);`,
+        function (err, res) {
+            if (err) { console.error(err) };
+            // Log all results of the SELECT statement
 
-        console.log("\n")
-        console.table(res);
-        console.log("\n")
+            console.log("\n")
+            console.table(res);
+            console.log("\n")
 
-    });
+        });
 
     mainMenu();
 
@@ -349,6 +351,32 @@ function allEmpDept() {
     //     console.table(res);
     // });
 
+    inquirer
+        .prompt([
+            {
+                type: "list",
+                message: "Which department would you like to view the employees of?",
+                choices: currDepts,
+                name: "deptView"
+            }
+        ])
+        .then(answers => {
+
+            connection.query(`SELECT a.id, a.first_name, a.last_name, r.title AS role, d.name AS department, r.salary, concat(b.first_name, ' ', b.last_name) AS manager 
+                FROM role AS r INNER JOIN department AS d ON (r.department_id=d.id) INNER JOIN employee AS a ON (r.id=a.role_id) 
+                LEFT JOIN employee AS b ON (a.manager_id=b.id) WHERE ?;`, {"d.id": answers.deptView},
+                function (err, res) {
+                    if (err) { console.error(err) };
+
+                    console.log("\n")
+                    console.table(res);
+                    console.log("\n")
+
+                    mainMenu();
+
+                });
+
+        })
 }
 
 // function allEmpMangr(){}
