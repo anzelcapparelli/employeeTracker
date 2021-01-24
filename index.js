@@ -400,7 +400,20 @@ function allEmpMangr() {
 
             connection.query(`SELECT a.id, a.first_name, a.last_name, r.title AS role, d.name AS department, r.salary, concat(b.first_name, ' ', b.last_name) AS manager 
                 FROM role AS r INNER JOIN department AS d ON (r.department_id=d.id) INNER JOIN employee AS a ON (r.id=a.role_id) 
-                LEFT JOIN employee AS b ON (a.manager_id=b.id) WHERE ?;`, { "a.manager_id": answers.mangrView },
+                LEFT JOIN employee AS b ON (a.manager_id=b.id) WHERE IF(? IS NULL, a.manager_id IS NULL, a.manager_id = ?);`, [answers.mangrView, answers.mangrView],
+
+                // function () {
+
+                //     if (answers.mangrView) {
+                //         console.log (answers.mangrView);
+                //         return { "a.manager_id": answers.mangrView };
+                //     } else {
+                //         console.log (answers.mangrView);
+                //         return "a.manager_id IS NULL";
+                //     }
+
+                // },
+
                 function (err, res) {
                     if (err) { console.error(err) };
 
